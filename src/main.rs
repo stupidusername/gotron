@@ -1,22 +1,41 @@
-use clap::Parser;
+use clap::Command;
 
-/// Simple program to greet a person
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Name of the person to greet
-    #[arg(short, long)]
-    name: String,
-
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
-}
+use gotron;
 
 fn main() {
-    let args = Args::parse();
+    let matches = Command::new("GoTron")
+        .subcommand_required(true)
+        .subcommand(
+            Command::new("characters")
+                .about("Get characters")
+        )
+        .subcommand(
+            Command::new("locations")
+                .about("Get locations")
+        )
+        .subcommand(
+            Command::new("episodes")
+                .about("Get episodes")
+        )
+        .subcommand(
+            Command::new("gogotron")
+                .about("Start proxy server")
+        )
+        .get_matches();
 
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name)
+    match matches.subcommand() {
+        Some(("characters", _)) => {
+            gotron::list_characters();
+        },
+        Some(("locations", _)) => {
+            gotron::list_locations();
+        },
+        Some(("episodes", _)) => {
+            gotron::list_episodes();
+        },
+        Some(("gogotron", _)) => {
+            gotron::start_proxy_server();
+        },
+        _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }
 }
