@@ -1,15 +1,29 @@
-pub fn list_characters() {
-    println!("List characters is not implemented yet.")
+use rick_and_morty as rm;
+
+pub async fn list_characters() {
+    let c = rm::character::get_all().await;
+    match c {
+        Ok(res) => println!("{:?}", res),
+        Err(e) => println!("{:?}", e),
+    }
 }
 
-pub fn list_locations() {
-    println!("List locations is not implemented yet.")
+pub async fn list_locations() {
+    let c = rm::location::get_all().await;
+    match c {
+        Ok(res) => println!("{:?}", res),
+        Err(e) => println!("{:?}", e),
+    }
 }
 
-pub fn list_episodes() {
-    println!("List episodes is not implemented yet.")
+pub async fn list_episodes() {
+    let c = rm::episode::get_all().await;
+    match c {
+        Ok(res) => println!("{:?}", res),
+        Err(e) => println!("{:?}", e),
+    }
 }
 
 pub fn start_proxy_server() {
-    println!("Proxy server is not implemented yet.")
+    println!("Proxy server is not implemented yet.");
 }

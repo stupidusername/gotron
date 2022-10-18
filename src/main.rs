@@ -2,7 +2,8 @@ use clap::Command;
 
 use gotron;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let matches = Command::new("GoTron")
         .subcommand_required(true)
         .subcommand(
@@ -25,13 +26,13 @@ fn main() {
 
     match matches.subcommand() {
         Some(("characters", _)) => {
-            gotron::list_characters();
+            gotron::list_characters().await;
         },
         Some(("locations", _)) => {
-            gotron::list_locations();
+            gotron::list_locations().await;
         },
         Some(("episodes", _)) => {
-            gotron::list_episodes();
+            gotron::list_episodes().await;
         },
         Some(("gogotron", _)) => {
             gotron::start_proxy_server();

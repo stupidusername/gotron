@@ -4,4 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.0.15"}
+clap = "4.0.15"
+rick-and-morty = "0.1.0"
+tokio = { version = "0.2", features = ["full"] }
