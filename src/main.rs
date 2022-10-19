@@ -1,6 +1,7 @@
 use clap::Command;
 
 use gotron;
+use tokio_compat_02::FutureExt;
 
 #[tokio::main]
 async fn main() {
@@ -26,13 +27,13 @@ async fn main() {
 
     match matches.subcommand() {
         Some(("characters", _)) => {
-            gotron::list_characters().await;
+            gotron::list_characters().compat().await;
         },
         Some(("locations", _)) => {
-            gotron::list_locations().await;
+            gotron::list_locations().compat().await;
         },
         Some(("episodes", _)) => {
-            gotron::list_episodes().await;
+            gotron::list_episodes().compat().await;
         },
         Some(("gogotron", _)) => {
             gotron::start_proxy_server().await;
