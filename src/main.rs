@@ -35,7 +35,7 @@ async fn main() {
             gotron::list_episodes().await;
         },
         Some(("gogotron", _)) => {
-            gotron::start_proxy_server();
+            gotron::start_proxy_server().await;
         },
         _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }

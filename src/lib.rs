@@ -1,4 +1,5 @@
 use rick_and_morty as rm;
+use warp::Filter;
 
 pub async fn list_characters() {
     let c = rm::character::get_all().await;
@@ -24,6 +25,12 @@ pub async fn list_episodes() {
     }
 }
 
-pub fn start_proxy_server() {
-    println!("Proxy server is not implemented yet.");
+pub async fn start_proxy_server() {
+    // GET /hello/warp => 200 OK with body "Hello, warp!"
+    let hello = warp::path!("hello" / String)
+        .map(|name| format!("Hello, {}!", name));
+
+    warp::serve(hello)
+        .run(([127, 0, 0, 1], 3030))
+        .await;
 }

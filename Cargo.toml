@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 clap = "4.0.15"
 rick-and-morty = "0.1.0"
-tokio = { version = "0.2", features = ["full"] }
+tokio = { version = "1.21.2", features = ["full"] }
+warp = "0.3.3"
