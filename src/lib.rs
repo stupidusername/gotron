@@ -1,5 +1,11 @@
 use rick_and_morty as rm;
-use warp::Filter;
+use warp::{hyper::body::Bytes, Filter, Rejection, Reply, http::Response};
+use warp_reverse_proxy::reverse_proxy_filter;
+
+async fn log_response(response: Response<Bytes>) -> Result<impl Reply, Rejection> {
+    println!("{:?}", response);
+    Ok(response)
+}
 
 pub async fn list_characters() {
     let c = rm::character::get_all().await;
@@ -26,11 +32,15 @@ pub async fn list_episodes() {
 }
 
 pub async fn start_proxy_server() {
-    // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let hello = warp::path!("hello" / String)
-        .map(|name| format!("Hello, {}!", name));
+    let hello_world = warp::path::end().map(|| "Hello, World at root!");
 
-    warp::serve(hello)
-        .run(([127, 0, 0, 1], 3030))
-        .await;
+    let hi = warp::path("hi").map(|| "Hello, World!");
+    let proxy = warp::path!("proxy" / ..).and(reverse_proxy_filter(
+        "proxy/".to_string(),
+        "https://rickandmortyapi.com/".to_string(),
+    )).and_then(log_response);
+
+    let routes = warp::get().and(hello_world.or(hi).or(proxy));
+
+    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
 }
