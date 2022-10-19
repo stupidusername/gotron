@@ -1,11 +1,8 @@
 use rick_and_morty as rm;
-use warp::{hyper::body::Bytes, Filter, Rejection, Reply, http::Response};
-use warp_reverse_proxy::reverse_proxy_filter;
-
-async fn log_response(response: Response<Bytes>) -> Result<impl Reply, Rejection> {
-    println!("{:?}", response);
-    Ok(response)
-}
+use warp::Filter;
+use warp_reverse_proxy::{
+    extract_request_data_filter, proxy_to_and_forward_response, Body, Headers,
+};
 
 pub async fn list_characters() {
     let c = rm::character::get_all().await;
@@ -35,10 +32,21 @@ pub async fn start_proxy_server() {
     let hello_world = warp::path::end().map(|| "Hello, World at root!");
 
     let hi = warp::path("hi").map(|| "Hello, World!");
-    let proxy = warp::path!("proxy" / ..).and(reverse_proxy_filter(
-        "proxy/".to_string(),
-        "https://rickandmortyapi.com/".to_string(),
-    )).and_then(log_response);
+    let proxy = warp::path!("proxy" / ..)
+        .and(extract_request_data_filter())
+        .and_then(|path, query, method, mut headers: Headers, body: Body| {
+            // The rick and morty API denies the request if this header is forwarded.
+            headers.remove("Host");
+            proxy_to_and_forward_response(
+                "https://rickandmortyapi.com/".to_string(),
+                "proxy/".to_string(),
+                path,
+                query,
+                method,
+                headers,
+                body,
+            )
+        });
 
     let routes = warp::get().and(hello_world.or(hi).or(proxy));
 
