@@ -29,9 +29,8 @@ pub async fn list_episodes() {
 }
 
 pub async fn start_proxy_server() {
-    let hello_world = warp::path::end().map(|| "Hello, World at root!");
+    let signup = warp::path("signup").map(|| "TODO: Generate API key");
 
-    let hi = warp::path("hi").map(|| "Hello, World!");
     let proxy = warp::path!("proxy" / ..)
         .and(extract_request_data_filter())
         .and_then(|path, query, method, mut headers: Headers, body: Body| {
@@ -48,7 +47,7 @@ pub async fn start_proxy_server() {
             )
         });
 
-    let routes = warp::get().and(hello_world.or(hi).or(proxy));
+    let routes = warp::get().and(signup.or(proxy));
 
     warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
 }
