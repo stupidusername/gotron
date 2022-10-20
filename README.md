@@ -12,9 +12,11 @@
 - Add API key validation for proxy endpoints
 - Cache proxy server results
 - Support binding address and port customization through env vars
+- Change base URL of response objects
 - Add documentation to readme:
+    - Build and run
     - Commands
     - Proxy endpoints:
         - Explain authorization
-        - /singup
+        - /singup (POST only)
         - /api | /graphql

@@ -29,11 +29,11 @@ pub async fn list_episodes() {
 }
 
 pub async fn start_proxy_server() {
-    let signup = warp::path("signup").map(|| "TODO: Generate API key");
+    let signup = warp::path("signup").and(warp::path::end()).and(warp::post()).map(|| "TODO: Generate API key");
 
-    let proxy = warp::path!("proxy" / ..)
+    let proxy = warp::path("api").or(warp::path("graphql"))
         .and(extract_request_data_filter())
-        .and_then(|path, query, method, mut headers: Headers, body: Body| {
+        .and_then(|_, path, query, method, mut headers: Headers, body: Body| {
             // The rick and morty API denies the request if this header is forwarded.
             headers.remove("Host");
             proxy_to_and_forward_response(
@@ -47,7 +47,7 @@ pub async fn start_proxy_server() {
             )
         });
 
-    let routes = warp::get().and(signup.or(proxy));
+    let routes = signup.or(proxy);
 
     warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
 }
