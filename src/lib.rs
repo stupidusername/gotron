@@ -1,6 +1,7 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use rick_and_morty as rm;
+use std::collections::HashMap;
 use warp::Filter;
 use warp_reverse_proxy::{
     extract_request_data_filter, proxy_to_and_forward_response, Body, Headers,
@@ -66,7 +67,11 @@ pub async fn start_proxy_server() {
     let signup = warp::path("signup")
         .and(warp::path::end())
         .and(warp::post())
-        .map(|| generate_api_key());
+        .map(|| {
+            let mut resp_obj= HashMap::new();
+            resp_obj.insert(String::from("api_key"), generate_api_key());
+            warp::reply::json(&resp_obj)
+        });
 
     let proxy = warp::path("api")
         .or(warp::path("graphql"))
