@@ -5,7 +5,8 @@
 
 ## TODO
 
-- Get characters, locations and episodes by ID
+- Refactor common print functionality
+- Remove compat call from main() ?
 - Add pretty print for command output
 - Add option to chose between pretty print and RAW output (check that the rick and morty crate outputs the raw format)
 - Add endpoint for getting an API key
@@ -15,7 +16,7 @@
 - Change base URL of response objects
 - Add documentation to readme:
     - Build and run
-    - Commands
+    - Commands and environment variables
     - Proxy endpoints:
         - Explain authorization
         - /singup (POST only)

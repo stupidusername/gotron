@@ -1,31 +1,65 @@
-use clap::Command;
+use clap::{Args, Parser, Subcommand};
+use tokio_compat_02::FutureExt;
 
 use gotron;
-use tokio_compat_02::FutureExt;
+
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    // Get a single character by its ID
+    Character(GetById),
+    // Get all characters
+    Characters,
+    // Get a location character by its ID
+    Location(GetById),
+    // Get all locations
+    Locations,
+    // Get a single episode by its ID
+    Episode(GetById),
+    // Get all episodes
+    Episodes,
+    // Start proxy server
+    Gogotron,
+}
+
+#[derive(Args)]
+struct GetById {
+    id: i64,
+}
 
 #[tokio::main]
 async fn main() {
-    let matches = Command::new("GoTron")
-        .subcommand_required(true)
-        .subcommand(Command::new("characters").about("Get characters"))
-        .subcommand(Command::new("locations").about("Get locations"))
-        .subcommand(Command::new("episodes").about("Get episodes"))
-        .subcommand(Command::new("gogotron").about("Start proxy server"))
-        .get_matches();
+    let cli = Cli::parse();
 
-    match matches.subcommand() {
-        Some(("characters", _)) => {
+    match &cli.command {
+        Commands::Character(get_by_id) => {
+            gotron::show_character(get_by_id.id).compat().await;
+        },
+        Commands::Characters => {
             gotron::list_characters().compat().await;
-        }
-        Some(("locations", _)) => {
+        },
+        Commands::Location(get_by_id) => {
+            gotron::show_location(get_by_id.id).compat().await;
+        },
+        Commands::Locations => {
             gotron::list_locations().compat().await;
-        }
-        Some(("episodes", _)) => {
+        },
+        Commands::Episode(get_by_id) => {
+            gotron::show_episode(get_by_id.id).compat().await;
+        },
+        Commands::Episodes => {
             gotron::list_episodes().compat().await;
-        }
-        Some(("gogotron", _)) => {
+        },
+        Commands::Gogotron => {
             gotron::start_proxy_server().await;
-        }
-        _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
+        },
     }
 }

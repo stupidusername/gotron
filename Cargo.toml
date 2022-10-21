@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = "4.0.15"
+clap = { version = "4.0.18", features = ["derive"] }
 rick-and-morty = "0.1.0"
 tokio = { version = "1.21.2", features = ["full"] }
 tokio-compat-02 = "0.2.0"
