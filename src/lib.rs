@@ -2,6 +2,8 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use rick_and_morty as rm;
 use std::collections::HashMap;
+use std::fs::OpenOptions;
+use std::io::Write;
 use warp::Filter;
 use warp_reverse_proxy::{
     extract_request_data_filter, proxy_to_and_forward_response, Body, Headers,
@@ -55,12 +57,32 @@ pub async fn list_episodes() {
     }
 }
 
-fn generate_api_key() -> String {
-    thread_rng()
+fn generate_and_save_api_key() -> Result<String, std::io::Error> {
+    let api_key = thread_rng()
         .sample_iter(&Alphanumeric)
         .take(16)
         .map(char::from)
-        .collect()
+        .collect();
+
+    let mut file = match OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open("api-keys.txt")
+    {
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!("Failed to open api-key file: {e}");
+            return Err(e);
+        }
+    };
+
+    if let Err(e) = writeln!(file, "{api_key}") {
+        eprintln!("Failed to write api-key file: {e}");
+        return Err(e);
+    }
+
+    Ok(api_key)
 }
 
 pub async fn start_proxy_server() {
@@ -68,8 +90,9 @@ pub async fn start_proxy_server() {
         .and(warp::path::end())
         .and(warp::post())
         .map(|| {
-            let mut resp_obj= HashMap::new();
-            resp_obj.insert(String::from("api_key"), generate_api_key());
+            let api_key = generate_and_save_api_key().unwrap();
+            let mut resp_obj = HashMap::new();
+            resp_obj.insert(String::from("api_key"), api_key);
             warp::reply::json(&resp_obj)
         });
 
