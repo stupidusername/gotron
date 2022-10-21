@@ -1,3 +1,5 @@
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 use rick_and_morty as rm;
 use warp::Filter;
 use warp_reverse_proxy::{
@@ -52,10 +54,22 @@ pub async fn list_episodes() {
     }
 }
 
-pub async fn start_proxy_server() {
-    let signup = warp::path("signup").and(warp::path::end()).and(warp::post()).map(|| "TODO: Generate API key");
+fn generate_api_key() -> String {
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(16)
+        .map(char::from)
+        .collect()
+}
 
-    let proxy = warp::path("api").or(warp::path("graphql"))
+pub async fn start_proxy_server() {
+    let signup = warp::path("signup")
+        .and(warp::path::end())
+        .and(warp::post())
+        .map(|| generate_api_key());
+
+    let proxy = warp::path("api")
+        .or(warp::path("graphql"))
         .and(extract_request_data_filter())
         .and_then(|_, path, query, method, mut headers: Headers, body: Body| {
             // The rick and morty API denies the request if this header is forwarded.

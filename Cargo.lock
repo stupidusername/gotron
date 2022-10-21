@@ -353,6 +353,7 @@ name = "gotron"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "rand",
  "rick-and-morty",
  "tokio 1.21.2",
  "tokio-compat-02",
