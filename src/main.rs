@@ -14,19 +14,19 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    // Get a single character by its ID
+    /// Get a single character by its ID
     Character(GetById),
-    // Get all characters
+    /// Get all characters
     Characters,
-    // Get a location character by its ID
+    /// Get a location character by its ID
     Location(GetById),
-    // Get all locations
+    /// Get all locations
     Locations,
-    // Get a single episode by its ID
+    /// Get a single episode by its ID
     Episode(GetById),
-    // Get all episodes
+    /// Get all episodes
     Episodes,
-    // Start proxy server
+    /// Start proxy server
     Gogotron,
 }
 
