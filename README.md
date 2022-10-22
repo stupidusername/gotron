@@ -12,7 +12,6 @@
 - Add option to chose between pretty print and RAW output (check that the rick and morty crate outputs the raw format)
 - Fix: Server panics if api key file access fails -> must return 500 response
 - Findout if the api keys path is relative to the process or the working directory (fix if needed)
-- Add API key validation for proxy endpoints
 - Cache proxy server results
 - Support binding address and port customization through env vars
 - Change base URL of response objects
@@ -24,4 +23,4 @@
         - Explain authorization
         - /singup (POST only)
         - /api | /graphql
-        - Proxy server limitations
+        - Proxy server limitations (Explain design decisions)
