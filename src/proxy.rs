@@ -81,6 +81,15 @@ fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
     }))
 }
 
+async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
+    if let Some(_) = err.find::<Unauthorized>() {
+        Ok(warp::reply::with_status("Unauthorized", StatusCode::UNAUTHORIZED))
+    } else {
+        Ok(warp::reply::with_status("Internal Server Error", StatusCode::INTERNAL_SERVER_ERROR))
+    }
+}
+
+
 pub async fn start_proxy_server() {
     let signup = warp::path("signup")
         .and(warp::path::end())
@@ -118,7 +127,7 @@ pub async fn start_proxy_server() {
             },
         );
 
-    let routes = signup.or(proxy);
+    let routes = signup.or(proxy).recover(handle_rejection);
 
     warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
 }
