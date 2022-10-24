@@ -1,9 +1,11 @@
+use std::fmt::Display;
+
 use rick_and_morty as rm;
 use serde::Serialize;
 
-pub struct Field {
-    label: String,
-    value: String,
+pub struct Field<'a> {
+    label: &'a str,
+    value: &'a dyn Display,
 }
 pub trait PrettyPrint {
     fn get_title(&self) -> &str;
@@ -25,43 +27,43 @@ impl PrettyPrint for rm::character::Character {
         &self.name
     }
 
-    fn get_fields(&self) -> Vec<Field> {
+    fn get_fields(&self)-> Vec<Field> {
         vec![
             Field {
-                label: String::from("id"),
-                value: self.id.to_string(),
+                label: "id",
+                value: &self.id,
             },
             Field {
-                label: String::from("name"),
-                value: self.name.clone(),
+                label: "name",
+                value: &self.name,
             },
             Field {
-                label: String::from("status"),
-                value: self.status.clone(),
+                label: "status",
+                value: &self.status,
             },
             Field {
-                label: String::from("species"),
-                value: self.species.clone(),
+                label: "species",
+                value: &self.species,
             },
             Field {
-                label: String::from("character_type"),
-                value: self.character_type.clone(),
+                label: "character_type",
+                value: &self.character_type,
             },
             Field {
-                label: String::from("origin"),
-                value: self.origin.name.clone(),
+                label: "origin",
+                value: &self.origin.name,
             },
             Field {
-                label: String::from("location"),
-                value: self.location.name.clone(),
+                label: "location",
+                value: &self.location.name,
             },
             Field {
-                label: String::from("gender"),
-                value: self.gender.clone(),
+                label: "gender",
+                value: &self.gender,
             },
             Field {
-                label: String::from("created"),
-                value: self.created.clone(),
+                label: "created",
+                value: &self.created,
             },
         ]
     }
@@ -75,24 +77,24 @@ impl PrettyPrint for rm::location::Location {
     fn get_fields(&self) -> Vec<Field> {
         vec![
             Field {
-                label: String::from("id"),
-                value: self.id.to_string(),
+                label: "id",
+                value: &self.id,
             },
             Field {
-                label: String::from("name"),
-                value: self.name.clone(),
+                label: "name",
+                value: &self.name,
             },
             Field {
-                label: String::from("location_type"),
-                value: self.location_type.clone(),
+                label: "location_type",
+                value: &self.location_type,
             },
             Field {
-                label: String::from("dimension"),
-                value: self.dimension.clone(),
+                label: "dimension",
+                value: &self.dimension,
             },
             Field {
-                label: String::from("created"),
-                value: self.created.clone(),
+                label: "created",
+                value: &self.created,
             },
         ]
     }
@@ -106,48 +108,54 @@ impl PrettyPrint for rm::episode::Episode {
     fn get_fields(&self) -> Vec<Field> {
         vec![
             Field {
-                label: String::from("id"),
-                value: self.id.to_string(),
+                label: "id",
+                value: &self.id,
             },
             Field {
-                label: String::from("name"),
-                value: self.name.clone(),
+                label: "name",
+                value: &self.name,
             },
             Field {
-                label: String::from("air_date"),
-                value: self.air_date.clone(),
+                label: "air_date",
+                value: &self.air_date,
             },
             Field {
-                label: String::from("episode"),
-                value: self.episode.clone(),
+                label: "episode",
+                value: &self.episode,
             },
             Field {
-                label: String::from("created"),
-                value: self.created.clone(),
+                label: "created",
+                value: &self.created,
             },
         ]
     }
 }
 
-pub fn print_entity(entity: &(impl PrettyPrint + Serialize), pretty: bool) {
-    if pretty {
-        entity.pretty_print();
-    } else {
-        println!("{}", serde_json::to_string(entity).unwrap());
-    }
+pub fn print_entity(entity: &(impl PrettyPrint + Serialize), output: &super::Output) {
+    match output {
+        super::Output::Pretty => {
+            entity.pretty_print();
+        },
+        super::Output::Json => {
+            println!("{}", serde_json::to_string(entity).unwrap());
+        }   
+    };
 }
 
-pub fn print_entities(entities: &Vec<impl PrettyPrint + Serialize>, pretty: bool) {
-    if pretty {
-        for (i, entity) in entities.iter().enumerate() {
-            if i > 0 {
-                println!();
+pub fn print_entities(entities: &Vec<impl PrettyPrint + Serialize>, output: &super::Output) {
+    match output {
+        super::Output::Pretty => {
+            for (i, entity) in entities.iter().enumerate() {
+                if i > 0 {
+                    println!();
+                }
+                entity.pretty_print();
             }
-            entity.pretty_print();
-        }
-    } else {
-        println!("{}", serde_json::to_string(entities).unwrap());
-    }
+        },
+        super::Output::Json => {
+            println!("{}", serde_json::to_string(entities).unwrap());
+        }   
+    };
 }
 
 pub async fn get_character(id: i64) -> Result<rm::character::Character, rm::Error> {

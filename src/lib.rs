@@ -45,7 +45,7 @@ struct GetAll {
  }
 
  #[derive(clap::ValueEnum, Clone)]
-enum Output {
+pub enum Output {
    Json,
    Pretty,
 }
@@ -56,22 +56,22 @@ pub async fn run() -> Result<(), Box<dyn Error>>{
 
     match &cli.command {
         Commands::Character(get_by_id) => {
-            cli::print_entity(&cli::get_character(get_by_id.id).compat().await.unwrap(), if let Output::Pretty = get_by_id.output { true } else { false });
+            cli::print_entity(&cli::get_character(get_by_id.id).compat().await?, &get_by_id.output);
         }
         Commands::Characters(get_all) => {
-            cli::print_entities(&cli::get_all_characters().compat().await.unwrap(), if let Output::Pretty = get_all.output { true } else { false });
+            cli::print_entities(&cli::get_all_characters().compat().await?, &get_all.output);
         }
         Commands::Location(get_by_id) => {
-            cli::print_entity(&cli::get_location(get_by_id.id).compat().await.unwrap(), if let Output::Pretty = get_by_id.output { true } else { false });
+            cli::print_entity(&cli::get_location(get_by_id.id).compat().await?, &get_by_id.output);
         }
         Commands::Locations(get_all) => {
-            cli::print_entities(&cli::get_all_locations().compat().await.unwrap(), if let Output::Pretty = get_all.output { true } else { false });
+            cli::print_entities(&cli::get_all_locations().compat().await?, &get_all.output);
         }
         Commands::Episode(get_by_id) => {
-            cli::print_entity(&cli::get_episode(get_by_id.id).compat().await.unwrap(), if let Output::Pretty = get_by_id.output { true } else { false });
+            cli::print_entity(&cli::get_episode(get_by_id.id).compat().await?, &get_by_id.output);
         }
         Commands::Episodes(get_all) => {
-            cli::print_entities(&cli::get_all_episodes().compat().await.unwrap(), if let Output::Pretty = get_all.output { true } else { false });
+            cli::print_entities(&cli::get_all_episodes().compat().await?, &get_all.output);
         }
         Commands::Gogotron => {
             proxy::start_proxy_server().await;
