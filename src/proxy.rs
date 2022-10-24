@@ -1,5 +1,6 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
+use warp::reject;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Write};
@@ -84,10 +85,25 @@ fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
 }
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
-    if let Some(_) = err.find::<Unauthorized>() {
+    if err.is_not_found() {
+        Ok(warp::reply::with_status(
+            "Not Found",
+            StatusCode::NOT_FOUND,
+        ))
+    } else if let Some(_) = err.find::<Unauthorized>() {
         Ok(warp::reply::with_status(
             "Unauthorized",
             StatusCode::UNAUTHORIZED,
+        ))
+    } else if let Some(_) = err.find::<reject::MethodNotAllowed>() {
+        Ok(warp::reply::with_status(
+            "Method Not Allowed",
+            StatusCode::METHOD_NOT_ALLOWED,
+        ))
+    } else if let Some(_) = err.find::<reject::MissingHeader>() {
+        Ok(warp::reply::with_status(
+            "Missing Headers",
+            StatusCode::BAD_REQUEST,
         ))
     } else {
         Ok(warp::reply::with_status(
