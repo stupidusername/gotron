@@ -40,25 +40,25 @@ async fn main() {
 
     match &cli.command {
         Commands::Character(get_by_id) => {
-            gotron::show_character(get_by_id.id).compat().await;
+            gotron::cli::show_character(get_by_id.id).compat().await;
         }
         Commands::Characters => {
-            gotron::list_characters().compat().await;
+            gotron::cli::list_characters().compat().await;
         }
         Commands::Location(get_by_id) => {
-            gotron::show_location(get_by_id.id).compat().await;
+            gotron::cli::show_location(get_by_id.id).compat().await;
         }
         Commands::Locations => {
-            gotron::list_locations().compat().await;
+            gotron::cli::list_locations().compat().await;
         }
         Commands::Episode(get_by_id) => {
-            gotron::show_episode(get_by_id.id).compat().await;
+            gotron::cli::show_episode(get_by_id.id).compat().await;
         }
         Commands::Episodes => {
-            gotron::list_episodes().compat().await;
+            gotron::cli::list_episodes().compat().await;
         }
         Commands::Gogotron => {
-            gotron::start_proxy_server().await;
+            gotron::proxy::start_proxy_server().await;
         }
     }
 }
