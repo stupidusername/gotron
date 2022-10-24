@@ -1,10 +1,10 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use warp::reject;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Write};
 use std::net::SocketAddr;
+use warp::reject;
 use warp::{http::StatusCode, reject::Reject, Filter, Rejection, Reply};
 use warp_reverse_proxy::{
     extract_request_data_filter, proxy_to_and_forward_response, Body, Headers,
@@ -86,10 +86,7 @@ fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
     if err.is_not_found() {
-        Ok(warp::reply::with_status(
-            "Not Found",
-            StatusCode::NOT_FOUND,
-        ))
+        Ok(warp::reply::with_status("Not Found", StatusCode::NOT_FOUND))
     } else if let Some(_) = err.find::<Unauthorized>() {
         Ok(warp::reply::with_status(
             "Unauthorized",
@@ -153,5 +150,7 @@ pub async fn start_proxy_server() {
     let routes = signup.or(proxy).recover(handle_rejection);
 
     println!("Starting proxy server on {SERVER_SOCKET_ADDR}");
-    warp::serve(routes).run(SERVER_SOCKET_ADDR.parse::<SocketAddr>().unwrap()).await;
+    warp::serve(routes)
+        .run(SERVER_SOCKET_ADDR.parse::<SocketAddr>().unwrap())
+        .await;
 }
