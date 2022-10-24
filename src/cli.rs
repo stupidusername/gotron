@@ -1,10 +1,11 @@
 use rick_and_morty as rm;
+use serde::Serialize;
 
-struct Field {
+pub struct Field {
     label: String,
     value: String,
 }
-trait PrettyPrint {
+pub trait PrettyPrint {
     fn get_title(&self) -> &str;
 
     fn get_fields(&self) -> Vec<Field>;
@@ -128,50 +129,47 @@ impl PrettyPrint for rm::episode::Episode {
     }
 }
 
-pub async fn show_character(id: i64) {
-    let c = rm::character::get(id).await;
-    match c {
-        Ok(res) => res.pretty_print(),
-        Err(e) => println!("{:?}", e),
+pub fn print_entity(entity: &(impl PrettyPrint + Serialize), pretty: bool) {
+    if pretty {
+        entity.pretty_print();
+    } else {
+        println!("{}", serde_json::to_string(entity).unwrap());
     }
 }
 
-pub async fn list_characters() {
-    let c = rm::character::get_all().await;
-    match c {
-        Ok(res) => println!("{:?}", res),
-        Err(e) => println!("{:?}", e),
+pub fn print_entities(entities: &Vec<impl PrettyPrint + Serialize>, pretty: bool) {
+    if pretty {
+        for (i, entity) in entities.iter().enumerate() {
+            if i > 0 {
+                println!();
+            }
+            entity.pretty_print();
+        }
+    } else {
+        println!("{}", serde_json::to_string(entities).unwrap());
     }
 }
 
-pub async fn show_location(id: i64) {
-    let c = rm::location::get(id).await;
-    match c {
-        Ok(res) => res.pretty_print(),
-        Err(e) => println!("{:?}", e),
-    }
+pub async fn get_character(id: i64) -> Result<rm::character::Character, rm::Error> {
+    rm::character::get(id).await
 }
 
-pub async fn list_locations() {
-    let c = rm::location::get_all().await;
-    match c {
-        Ok(res) => println!("{:?}", res),
-        Err(e) => println!("{:?}", e),
-    }
+pub async fn get_all_characters() -> Result<Vec<rm::character::Character>, rm::Error> {
+    rm::character::get_all().await
 }
 
-pub async fn show_episode(id: i64) {
-    let c = rm::episode::get(id).await;
-    match c {
-        Ok(res) => res.pretty_print(),
-        Err(e) => println!("{:?}", e),
-    }
+pub async fn get_location(id: i64) -> Result<rm::location::Location, rm::Error> {
+    rm::location::get(id).await
 }
 
-pub async fn list_episodes() {
-    let c = rm::episode::get_all().await;
-    match c {
-        Ok(res) => println!("{:?}", res),
-        Err(e) => println!("{:?}", e),
-    }
+pub async fn get_all_locations() -> Result<Vec<rm::location::Location>, rm::Error> {
+    rm::location::get_all().await
+}
+
+pub async fn get_episode(id: i64) -> Result<rm::episode::Episode, rm::Error> {
+    rm::episode::get(id).await
+}
+
+pub async fn get_all_episodes() -> Result<Vec<rm::episode::Episode>, rm::Error> {
+    rm::episode::get_all().await
 }

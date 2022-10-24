@@ -6,10 +6,7 @@
 ## TODO
 
 - Review & refactor
-- Refactor common print functionality
 - Remove compat call from main() ?
-- Add pretty print for command output
-- Add option to chose between pretty print and RAW output (check that the rick and morty crate outputs the raw format)
 - Fix: Server panics if api key file access fails -> must return 500 response
 - Findout if the api keys path is relative to the process or the working directory (fix if needed)
 - Cache proxy server results
