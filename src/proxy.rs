@@ -1,9 +1,9 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use warp::reject::Reject;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
-use std::io::{Write, BufReader, BufRead};
+use std::io::{BufRead, BufReader, Write};
+use warp::reject::Reject;
 use warp::{Filter, Rejection};
 use warp_reverse_proxy::{
     extract_request_data_filter, proxy_to_and_forward_response, Body, Headers,
@@ -58,21 +58,23 @@ pub async fn start_proxy_server() {
         .or(warp::path("graphql"))
         .and(auth_validation())
         .and(extract_request_data_filter())
-        .and_then(|_, _, path, query, method, mut headers: Headers, body: Body| {
-            // The Rick and Morty API denies the request if this header is forwarded.
-            headers.remove("Host");
-            // The authorization header should not be sent to the Rick and Morty API.
-            headers.remove("Authorization");
-            proxy_to_and_forward_response(
-                "https://rickandmortyapi.com/".to_string(),
-                "proxy/".to_string(),
-                path,
-                query,
-                method,
-                headers,
-                body,
-            )
-        });
+        .and_then(
+            |_, _, path, query, method, mut headers: Headers, body: Body| {
+                // The Rick and Morty API denies the request if this header is forwarded.
+                headers.remove("Host");
+                // The authorization header should not be sent to the Rick and Morty API.
+                headers.remove("Authorization");
+                proxy_to_and_forward_response(
+                    "https://rickandmortyapi.com/".to_string(),
+                    "proxy/".to_string(),
+                    path,
+                    query,
+                    method,
+                    headers,
+                    body,
+                )
+            },
+        );
 
     let routes = signup.or(proxy);
 
@@ -92,7 +94,13 @@ fn auth_validation() -> impl Filter<Extract = ((),), Error = Rejection> + Copy {
 
 // TODO: Explain why error type is not encapsuled
 fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
-    let file = OpenOptions::new().create(true).write(true).read(true).open("api-keys.txt")?;
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .read(true)
+        .open("api-keys.txt")?;
     // TODO: Change or clarify why did I need to use "unwrap()".
-    Ok(BufReader::new(file).lines().any(|line| api_key == line.unwrap()))
+    Ok(BufReader::new(file)
+        .lines()
+        .any(|line| api_key == line.unwrap()))
 }

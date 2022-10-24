@@ -4,8 +4,7 @@ use tokio_compat_02::FutureExt;
 use gotron;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[command(version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
