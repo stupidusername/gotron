@@ -5,7 +5,6 @@
 
 ## TODO
 
-- Review & refactor
 - Findout if the api keys path is relative to the process or the working directory (fix if needed) [Working directory -> add to docs]
 - Cache proxy server results
 - Change base URL of response objects

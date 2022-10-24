@@ -1,14 +1,16 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use warp::Reply;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Write};
-use warp::reject::Reject;
-use warp::{Filter, Rejection, http::StatusCode};
+use std::net::SocketAddr;
+use warp::{http::StatusCode, reject::Reject, Filter, Rejection, Reply};
 use warp_reverse_proxy::{
     extract_request_data_filter, proxy_to_and_forward_response, Body, Headers,
 };
+
+const API_KEYS_FILE: &str = "api-keys.txt";
+const SERVER_SOCKET_ADDR: &str = "127.0.0.1:8080";
 
 #[derive(Debug)]
 struct InternalServerError;
@@ -31,7 +33,7 @@ fn generate_and_save_api_key() -> Result<String, std::io::Error> {
         .create(true)
         .write(true)
         .append(true)
-        .open("api-keys.txt")
+        .open(API_KEYS_FILE)
     {
         Ok(file) => file,
         Err(e) => {
@@ -63,7 +65,7 @@ fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
         .create(true)
         .write(true)
         .read(true)
-        .open("api-keys.txt")
+        .open(API_KEYS_FILE)
     {
         Ok(file) => file,
         Err(e) => {
@@ -83,12 +85,17 @@ fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
     if let Some(_) = err.find::<Unauthorized>() {
-        Ok(warp::reply::with_status("Unauthorized", StatusCode::UNAUTHORIZED))
+        Ok(warp::reply::with_status(
+            "Unauthorized",
+            StatusCode::UNAUTHORIZED,
+        ))
     } else {
-        Ok(warp::reply::with_status("Internal Server Error", StatusCode::INTERNAL_SERVER_ERROR))
+        Ok(warp::reply::with_status(
+            "Internal Server Error",
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ))
     }
 }
-
 
 pub async fn start_proxy_server() {
     let signup = warp::path("signup")
@@ -129,5 +136,6 @@ pub async fn start_proxy_server() {
 
     let routes = signup.or(proxy).recover(handle_rejection);
 
-    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
+    println!("Starting proxy server on {SERVER_SOCKET_ADDR}");
+    warp::serve(routes).run(SERVER_SOCKET_ADDR.parse::<SocketAddr>().unwrap()).await;
 }
