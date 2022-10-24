@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use thiserror::Error;
 
 use rick_and_morty as rm;
 use serde::Serialize;
@@ -27,7 +28,7 @@ impl PrettyPrint for rm::character::Character {
         &self.name
     }
 
-    fn get_fields(&self)-> Vec<Field> {
+    fn get_fields(&self) -> Vec<Field> {
         vec![
             Field {
                 label: "id",
@@ -135,10 +136,10 @@ pub fn print_entity(entity: &(impl PrettyPrint + Serialize), output: &super::Out
     match output {
         super::Output::Pretty => {
             entity.pretty_print();
-        },
+        }
         super::Output::Json => {
             println!("{}", serde_json::to_string(entity).unwrap());
-        }   
+        }
     };
 }
 
@@ -151,33 +152,51 @@ pub fn print_entities(entities: &Vec<impl PrettyPrint + Serialize>, output: &sup
                 }
                 entity.pretty_print();
             }
-        },
+        }
         super::Output::Json => {
             println!("{}", serde_json::to_string(entities).unwrap());
-        }   
+        }
     };
 }
 
-pub async fn get_character(id: i64) -> Result<rm::character::Character, rm::Error> {
-    rm::character::get(id).await
+#[derive(Error, Debug)]
+pub enum CliError {
+    #[error("could not retrive information from Rick and Morty API")]
+    ApiClientError(#[from] rm::Error),
 }
 
-pub async fn get_all_characters() -> Result<Vec<rm::character::Character>, rm::Error> {
-    rm::character::get_all().await
+pub async fn get_character(id: i64) -> Result<rm::character::Character, CliError> {
+    rm::character::get(id)
+        .await
+        .map_err(|e| CliError::ApiClientError(e))
 }
 
-pub async fn get_location(id: i64) -> Result<rm::location::Location, rm::Error> {
-    rm::location::get(id).await
+pub async fn get_all_characters() -> Result<Vec<rm::character::Character>, CliError> {
+    rm::character::get_all()
+        .await
+        .map_err(|e| CliError::ApiClientError(e))
 }
 
-pub async fn get_all_locations() -> Result<Vec<rm::location::Location>, rm::Error> {
-    rm::location::get_all().await
+pub async fn get_location(id: i64) -> Result<rm::location::Location, CliError> {
+    rm::location::get(id)
+        .await
+        .map_err(|e| CliError::ApiClientError(e))
 }
 
-pub async fn get_episode(id: i64) -> Result<rm::episode::Episode, rm::Error> {
-    rm::episode::get(id).await
+pub async fn get_all_locations() -> Result<Vec<rm::location::Location>, CliError> {
+    rm::location::get_all()
+        .await
+        .map_err(|e| CliError::ApiClientError(e))
 }
 
-pub async fn get_all_episodes() -> Result<Vec<rm::episode::Episode>, rm::Error> {
-    rm::episode::get_all().await
+pub async fn get_episode(id: i64) -> Result<rm::episode::Episode, CliError> {
+    rm::episode::get(id)
+        .await
+        .map_err(|e| CliError::ApiClientError(e))
+}
+
+pub async fn get_all_episodes() -> Result<Vec<rm::episode::Episode>, CliError> {
+    rm::episode::get_all()
+        .await
+        .map_err(|e| CliError::ApiClientError(e))
 }

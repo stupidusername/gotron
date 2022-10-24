@@ -1,15 +1,25 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
+use warp::Reply;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Write};
 use warp::reject::Reject;
-use warp::{Filter, Rejection};
+use warp::{Filter, Rejection, http::StatusCode};
 use warp_reverse_proxy::{
     extract_request_data_filter, proxy_to_and_forward_response, Body, Headers,
 };
 
-// TODO: Explain why error type is not encapsuled
+#[derive(Debug)]
+struct InternalServerError;
+
+impl Reject for InternalServerError {}
+
+#[derive(Debug)]
+struct Unauthorized;
+
+impl Reject for Unauthorized {}
+
 fn generate_and_save_api_key() -> Result<String, std::io::Error> {
     let api_key = thread_rng()
         .sample_iter(&Alphanumeric)
@@ -25,33 +35,65 @@ fn generate_and_save_api_key() -> Result<String, std::io::Error> {
     {
         Ok(file) => file,
         Err(e) => {
-            eprintln!("Failed to open api-key file: {e}");
+            eprintln!("Failed to open api-keys file: {e}");
             return Err(e);
         }
     };
 
     if let Err(e) = writeln!(file, "{api_key}") {
-        eprintln!("Failed to write api-key file: {e}");
+        eprintln!("Failed to write api-keys file: {e}");
         return Err(e);
     }
 
     Ok(api_key)
 }
 
-#[derive(Debug)]
-struct Unauthorized;
+fn auth_validation() -> impl Filter<Extract = ((),), Error = Rejection> + Copy {
+    warp::header::<String>("Authorization").and_then(|api_key: String| async move {
+        match validate_api_key(&api_key) {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(warp::reject::custom(Unauthorized)),
+            Err(_) => Err(warp::reject::custom(InternalServerError)),
+        }
+    })
+}
 
-impl Reject for Unauthorized {}
+fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
+    let file = match OpenOptions::new()
+        .create(true)
+        .write(true)
+        .read(true)
+        .open("api-keys.txt")
+    {
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!("Failed to open api-keys file: {e}");
+            return Err(e);
+        }
+    };
+
+    Ok(BufReader::new(file).lines().any(|line| match line {
+        Ok(content) => api_key == content,
+        Err(e) => {
+            eprintln!("Failed to read api-keys file: {e}");
+            false
+        }
+    }))
+}
 
 pub async fn start_proxy_server() {
     let signup = warp::path("signup")
         .and(warp::path::end())
         .and(warp::post())
-        .map(|| {
-            let api_key = generate_and_save_api_key().unwrap();
-            let mut resp_obj = HashMap::new();
-            resp_obj.insert(String::from("api_key"), api_key);
-            warp::reply::json(&resp_obj)
+        .and_then(|| async {
+            match generate_and_save_api_key() {
+                Ok(api_key) => {
+                    let mut resp_obj = HashMap::new();
+                    resp_obj.insert(String::from("api_key"), api_key);
+                    Ok(warp::reply::json(&resp_obj))
+                }
+                Err(_) => Err(warp::reject::custom(InternalServerError)),
+            }
         });
 
     let proxy = warp::path("api")
@@ -79,28 +121,4 @@ pub async fn start_proxy_server() {
     let routes = signup.or(proxy);
 
     warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
-}
-
-fn auth_validation() -> impl Filter<Extract = ((),), Error = Rejection> + Copy {
-    warp::header::<String>("Authorization").and_then(|api_key: String| async move {
-        // This is not good: Errors from validate_api_key() are handled responding 403s.
-        if let Ok(true) = validate_api_key(&api_key) {
-            Ok(())
-        } else {
-            Err(warp::reject::custom(Unauthorized))
-        }
-    })
-}
-
-// TODO: Explain why error type is not encapsuled
-fn validate_api_key(api_key: &str) -> Result<bool, std::io::Error> {
-    let file = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .read(true)
-        .open("api-keys.txt")?;
-    // TODO: Change or clarify why did I need to use "unwrap()".
-    Ok(BufReader::new(file)
-        .lines()
-        .any(|line| api_key == line.unwrap()))
 }

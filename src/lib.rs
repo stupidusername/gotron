@@ -1,6 +1,6 @@
 use clap::{Args, Parser, Subcommand};
-use tokio_compat_02::FutureExt;
 use std::error::Error;
+use tokio_compat_02::FutureExt;
 
 pub mod cli;
 pub mod proxy;
@@ -42,33 +42,42 @@ struct GetById {
 struct GetAll {
     #[arg(short, long, value_enum)]
     output: Output,
- }
+}
 
- #[derive(clap::ValueEnum, Clone)]
+#[derive(clap::ValueEnum, Clone)]
 pub enum Output {
-   Json,
-   Pretty,
+    Json,
+    Pretty,
 }
 
 #[tokio::main]
-pub async fn run() -> Result<(), Box<dyn Error>>{
+pub async fn run() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     match &cli.command {
         Commands::Character(get_by_id) => {
-            cli::print_entity(&cli::get_character(get_by_id.id).compat().await?, &get_by_id.output);
+            cli::print_entity(
+                &cli::get_character(get_by_id.id).compat().await?,
+                &get_by_id.output,
+            );
         }
         Commands::Characters(get_all) => {
             cli::print_entities(&cli::get_all_characters().compat().await?, &get_all.output);
         }
         Commands::Location(get_by_id) => {
-            cli::print_entity(&cli::get_location(get_by_id.id).compat().await?, &get_by_id.output);
+            cli::print_entity(
+                &cli::get_location(get_by_id.id).compat().await?,
+                &get_by_id.output,
+            );
         }
         Commands::Locations(get_all) => {
             cli::print_entities(&cli::get_all_locations().compat().await?, &get_all.output);
         }
         Commands::Episode(get_by_id) => {
-            cli::print_entity(&cli::get_episode(get_by_id.id).compat().await?, &get_by_id.output);
+            cli::print_entity(
+                &cli::get_episode(get_by_id.id).compat().await?,
+                &get_by_id.output,
+            );
         }
         Commands::Episodes(get_all) => {
             cli::print_entities(&cli::get_all_episodes().compat().await?, &get_all.output);

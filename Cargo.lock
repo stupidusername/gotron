@@ -357,6 +357,7 @@ dependencies = [
  "rick-and-morty",
  "serde",
  "serde_json",
+ "thiserror",
  "tokio 1.21.2",
  "tokio-compat-02",
  "warp",
