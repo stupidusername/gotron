@@ -6,7 +6,6 @@
 ## TODO
 
 - Review & refactor
-- Remove compat call from main() ?
 - Fix: Server panics if api key file access fails -> must return 500 response
 - Findout if the api keys path is relative to the process or the working directory (fix if needed)
 - Cache proxy server results
